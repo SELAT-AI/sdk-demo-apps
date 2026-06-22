@@ -15,6 +15,8 @@ import {
 
 export const runtime = "nodejs";
 
+const DEFAULT_AGENT_WALLET_ADDRESS = "0xb291279be48742f0a1e9ed15c8d6d2d09ea9e4da" as const;
+
 type DemoRequestBody = {
   endpointId?: string;
   url?: string;
@@ -35,7 +37,7 @@ type DemoClientResult =
 function createDemoClient(): DemoClientResult {
   const chain = getChain();
   const routerUrl = process.env.SELAT_ROUTER_URL;
-  const remoteSignerAddress = process.env.SELAT_SIGNER_ADDRESS as `0x${string}` | undefined;
+  const remoteSignerAddress = (process.env.SELAT_SIGNER_ADDRESS as `0x${string}` | undefined) ?? DEFAULT_AGENT_WALLET_ADDRESS;
 
   if (remoteSignerAddress) {
     const signer = createCircleAgentWalletSigner({
@@ -245,7 +247,7 @@ export async function POST(request: Request) {
         endpointId: endpoint?.id,
         endpointName: endpoint?.name,
         preferProtocol: options.preferProtocol,
-        signerAddress: process.env.SELAT_SIGNER_ADDRESS,
+        signerAddress: process.env.SELAT_SIGNER_ADDRESS ?? DEFAULT_AGENT_WALLET_ADDRESS,
         targetUrl
       },
       () => client.fetch(targetUrl, options)

@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 export const runtime = "nodejs";
 
 const execFileAsync = promisify(execFile);
+const DEFAULT_AGENT_WALLET_ADDRESS = "0xb291279be48742f0a1e9ed15c8d6d2d09ea9e4da";
 
 function isVercelRuntime() {
   return process.env.VERCEL === "1" || Boolean(process.env.VERCEL_ENV);
@@ -119,7 +120,7 @@ function filterPaidCallTransactions(transactions: unknown, since: string) {
 }
 
 export async function GET(request: Request) {
-  const address = process.env.SELAT_SIGNER_ADDRESS;
+  const address = process.env.SELAT_SIGNER_ADDRESS ?? DEFAULT_AGENT_WALLET_ADDRESS;
   const chain = toCircleChain(process.env.SELAT_CHAIN ?? "base");
   const url = new URL(request.url);
   const since = url.searchParams.get("since");
