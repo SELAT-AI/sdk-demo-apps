@@ -32,7 +32,9 @@ function getChain(): RouterClientOptions["chain"] {
 
 function getCircleCliCommand() {
   if (process.env.CIRCLE_CLI_COMMAND) {
-    return process.env.CIRCLE_CLI_COMMAND;
+    return path.isAbsolute(process.env.CIRCLE_CLI_COMMAND)
+      ? process.env.CIRCLE_CLI_COMMAND
+      : path.join(process.cwd(), process.env.CIRCLE_CLI_COMMAND);
   }
 
   const bundledCircleCli = path.join(process.cwd(), "node_modules", ".bin", "circle");
