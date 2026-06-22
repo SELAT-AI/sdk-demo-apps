@@ -29,6 +29,7 @@ SELAT_ROUTER_URL=https://router.selat.ai
 
 # Circle Agent Wallet path
 SELAT_SIGNER_ADDRESS=0x...
+CIRCLE_CLI_COMMAND=/absolute/path/to/circle
 
 # Local private-key demo path
 X402_CLIENT_PRIVATE_KEY=

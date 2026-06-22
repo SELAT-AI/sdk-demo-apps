@@ -28,6 +28,10 @@ function getChain(): RouterClientOptions["chain"] {
   return (process.env.SELAT_CHAIN ?? "base") as RouterClientOptions["chain"];
 }
 
+function getCircleCliCommand() {
+  return process.env.CIRCLE_CLI_COMMAND ?? "circle";
+}
+
 type DemoClientResult =
   | { client: RouterClient; setup?: never }
   | { client: null; setup: string };
@@ -40,7 +44,8 @@ function createDemoClient(): DemoClientResult {
   if (remoteSignerAddress) {
     const signer = createCircleAgentWalletSigner({
       address: remoteSignerAddress,
-      chain: "base"
+      chain: "base",
+      cliCommand: getCircleCliCommand()
     });
 
     return {
