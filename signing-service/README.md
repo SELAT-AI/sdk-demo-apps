@@ -93,7 +93,7 @@ solves. A `Dockerfile` is included.
 In the Vercel project for [`eth-market-brief`](../eth-market-brief), set:
 
 ```bash
-SELAT_SIGNER_ADDRESS=0x<agent-wallet>          # == CIRCLE_SIGNER_ADDRESS here
+SELAT_SIGNER_ADDRESS=0xb291279be48742f0a1e9ed15c8d6d2d09ea9e4da   # == CIRCLE_SIGNER_ADDRESS here
 SELAT_SIGNER_API_URL=https://<this-host>/sign
 SELAT_SIGNER_API_TOKEN=<same as SIGNER_API_TOKEN>
 ```
