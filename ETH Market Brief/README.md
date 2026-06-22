@@ -42,7 +42,7 @@ X402_CLIENT_PRIVATE_KEY=
 
 The signer is resolved in this order:
 
-1. **Remote signer (`SELAT_SIGNER_ADDRESS` + `SELAT_SIGNER_API_URL`)** — the only Circle Agent Wallet path that works on Vercel. Signing is delegated over HTTP to a service you host where the Circle CLI / Agent Wallet credentials live. The service must accept `POST { address, typedData }` and return `{ signature }`, signing with the key that recovers to `SELAT_SIGNER_ADDRESS`. Optionally protect it with `SELAT_SIGNER_API_TOKEN` (sent as `Authorization: Bearer …`).
+1. **Remote signer (`SELAT_SIGNER_ADDRESS` + `SELAT_SIGNER_API_URL`)** — the only Circle Agent Wallet path that works on Vercel, via the SDK's `createHttpRemoteSigner`. Signing is delegated over HTTP to a service you host where the Circle CLI / Agent Wallet credentials live. The service must accept `POST { address, typedData }` and return `{ signature }`, signing `typedData` with the Agent Wallet's key (the SDK resolves the gateway owner address automatically, so smart-contract-account wallets work too). Optionally protect it with `SELAT_SIGNER_API_TOKEN` (sent as `Authorization: Bearer …`).
 2. **Local Circle CLI (`SELAT_SIGNER_ADDRESS` only)** — signs by spawning the local `circle` CLI, which must be installed and authenticated (`circle login`). **This path does not work on Vercel** — the CLI binary and its login session do not exist in a serverless function. When detected on Vercel, the demo returns a `501` with setup guidance instead of failing with an opaque `500`.
 3. **Local private key (`X402_CLIENT_PRIVATE_KEY`)** — fully serverless-compatible in-process signing for quick demos. Not the Circle Agent Wallet custody model.
 

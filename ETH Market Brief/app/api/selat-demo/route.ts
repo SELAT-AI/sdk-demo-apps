@@ -1,7 +1,7 @@
 import {
   RouterClient,
   createCircleAgentWalletSigner,
-  createRemoteSigner,
+  createHttpRemoteSigner,
   createViemSigner,
   type RouterClientOptions,
   type RouterFetchOptions
@@ -42,55 +42,24 @@ type DemoClientResult =
   | { client: RouterClient; setup?: never }
   | { client: null; setup: string };
 
-// Build a signer that delegates EIP-712 signing to a hosted signing service
-// (where the Circle CLI / Agent Wallet credentials actually live). This is the
-// only Circle Agent Wallet path that works on Vercel.
-//
-// The service must accept `POST { address, typedData }` and respond with
-// `{ signature }`. Because the SDK puts `signer.address` into the gateway
-// authorization's `from` field, the service must sign with the key that
-// recovers to SELAT_SIGNER_ADDRESS (i.e. the Agent Wallet's own signing key).
-function createRemoteAgentWalletSigner(address: `0x${string}`, endpoint: string) {
-  return createRemoteSigner(address, async ({ address: from, typedData }) => {
-    const token = process.env.SELAT_SIGNER_API_TOKEN;
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        ...(token ? { authorization: `Bearer ${token}` } : {})
-      },
-      body: JSON.stringify({ address: from, typedData })
-    });
-
-    if (!response.ok) {
-      const detail = await response.text().catch(() => "");
-      throw new Error(
-        `Remote signer request failed (${response.status} ${response.statusText})${detail ? `: ${detail}` : ""}`
-      );
-    }
-
-    const data = (await response.json().catch(() => null)) as { signature?: string } | null;
-    if (!data?.signature) {
-      throw new Error("Remote signer response did not include a `signature`.");
-    }
-
-    return data.signature as `0x${string}`;
-  });
-}
-
 function createDemoClient(): DemoClientResult {
   const chain = getChain();
   const routerUrl = process.env.SELAT_ROUTER_URL;
   const signerAddress = process.env.SELAT_SIGNER_ADDRESS as `0x${string}` | undefined;
   const remoteSignerUrl = process.env.SELAT_SIGNER_API_URL;
 
-  // Preferred Agent Wallet path on serverless: delegate signing over HTTP.
+  // Preferred Agent Wallet path on serverless: delegate signing over HTTP to a
+  // hosted service (where the Circle CLI / Agent Wallet credentials live).
   if (signerAddress && remoteSignerUrl) {
     return {
       client: new RouterClient({
         chain,
         routerUrl,
-        signer: createRemoteAgentWalletSigner(signerAddress, remoteSignerUrl)
+        signer: createHttpRemoteSigner({
+          address: signerAddress,
+          endpoint: remoteSignerUrl,
+          token: process.env.SELAT_SIGNER_API_TOKEN
+        })
       })
     };
   }
