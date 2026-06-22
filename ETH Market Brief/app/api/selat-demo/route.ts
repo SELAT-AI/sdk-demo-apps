@@ -6,6 +6,8 @@ import {
   type RouterFetchOptions
 } from "@selat-ai/router-client";
 import { createHash } from "node:crypto";
+import { existsSync } from "node:fs";
+import path from "node:path";
 import { NextResponse } from "next/server";
 import { getDemoEndpoint, toRouterFetchOptions } from "@/lib/demo-catalogue";
 import {
@@ -29,7 +31,13 @@ function getChain(): RouterClientOptions["chain"] {
 }
 
 function getCircleCliCommand() {
-  return process.env.CIRCLE_CLI_COMMAND ?? "circle";
+  if (process.env.CIRCLE_CLI_COMMAND) {
+    return process.env.CIRCLE_CLI_COMMAND;
+  }
+
+  const bundledCircleCli = path.join(process.cwd(), "node_modules", ".bin", "circle");
+
+  return existsSync(bundledCircleCli) ? bundledCircleCli : "circle";
 }
 
 type DemoClientResult =
