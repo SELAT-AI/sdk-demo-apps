@@ -1,3 +1,5 @@
+import { CIRCLE_AGENT_WALLET_NEXT_TRACE_INCLUDES } from "@selat-ai/router-client";
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
@@ -5,14 +7,8 @@ const nextConfig = {
   },
   typedRoutes: true,
   outputFileTracingIncludes: {
-    "/api/selat-demo": [
-      "./node_modules/.bin/circle",
-      "./node_modules/@circle-fin/cli/**/*"
-    ],
-    "/api/gateway-txns": [
-      "./node_modules/.bin/circle",
-      "./node_modules/@circle-fin/cli/**/*"
-    ]
+    "/api/selat-demo": CIRCLE_AGENT_WALLET_NEXT_TRACE_INCLUDES,
+    "/api/gateway-txns": CIRCLE_AGENT_WALLET_NEXT_TRACE_INCLUDES
   }
 };
 

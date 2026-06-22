@@ -6,8 +6,6 @@ import {
   type RouterFetchOptions
 } from "@selat-ai/router-client";
 import { createHash } from "node:crypto";
-import { existsSync } from "node:fs";
-import path from "node:path";
 import { NextResponse } from "next/server";
 import { getDemoEndpoint, toRouterFetchOptions } from "@/lib/demo-catalogue";
 import {
@@ -30,18 +28,6 @@ function getChain(): RouterClientOptions["chain"] {
   return (process.env.SELAT_CHAIN ?? "base") as RouterClientOptions["chain"];
 }
 
-function getCircleCliCommand() {
-  if (process.env.CIRCLE_CLI_COMMAND) {
-    return path.isAbsolute(process.env.CIRCLE_CLI_COMMAND)
-      ? process.env.CIRCLE_CLI_COMMAND
-      : path.join(process.cwd(), process.env.CIRCLE_CLI_COMMAND);
-  }
-
-  const bundledCircleCli = path.join(process.cwd(), "node_modules", ".bin", "circle");
-
-  return existsSync(bundledCircleCli) ? bundledCircleCli : "circle";
-}
-
 type DemoClientResult =
   | { client: RouterClient; setup?: never }
   | { client: null; setup: string };
@@ -54,8 +40,7 @@ function createDemoClient(): DemoClientResult {
   if (remoteSignerAddress) {
     const signer = createCircleAgentWalletSigner({
       address: remoteSignerAddress,
-      chain: "base",
-      cliCommand: getCircleCliCommand()
+      chain: "base"
     });
 
     return {
