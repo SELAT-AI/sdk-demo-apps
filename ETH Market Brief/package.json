@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@circle-fin/cli": "^0.0.5",
     "@selat-ai/router-client": "^0.1.0",
     "next": "^15.3.0",
     "react": "^19.0.0",
