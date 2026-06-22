@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="SELAT">
+  <title>SELAT</title>
+  <!-- Left S-curve: small-size optimized fill -->
+  <path fill="#0A8F78" d="M 32 10 C 44 10 52 20 52 33 C 52 44 40 53 36 60 C 26 73 28 85 40 88 L 28 88 C 16 88 14 74 24 62 C 29 56 40 47 40 34 C 40 22 34 17 24 18 C 24 12 26 10 32 10 Z"/>
+  <!-- Right S-curve: mirror -->
+  <path fill="#0A8F78" d="M 68 90 C 56 90 48 80 48 67 C 48 56 60 47 64 40 C 74 27 72 15 60 12 L 72 12 C 84 12 86 26 76 38 C 71 44 60 53 60 66 C 60 78 66 83 76 82 C 76 88 74 90 68 90 Z"/>
+</svg>
