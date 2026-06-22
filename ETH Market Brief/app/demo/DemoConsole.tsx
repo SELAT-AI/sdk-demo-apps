@@ -641,7 +641,7 @@ export function DemoConsole({ endpoints }: DemoConsoleProps) {
             <small>{gatewayActivity?.address ?? "Server-configured wallet"}</small>
           </div>
           <div>
-            <strong>Circle chain</strong>
+            <strong>Gateway chain</strong>
             <small>{gatewayActivity?.chain ?? "BASE"}</small>
           </div>
         </div>
