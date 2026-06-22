@@ -3,3 +3,7 @@
 **/node_modules/
 **/next-env.d.ts
 **/*.tsbuildinfo
+
+# Vercel local project links
+**/.vercel/
+**/.vercel-*/

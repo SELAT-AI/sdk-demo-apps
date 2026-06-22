@@ -38,3 +38,4 @@ SELAT_SIGNER_API_URL=
 ```
 
 The demo redacts payment signatures before returning capture data to the browser. It shows a signature digest for correlation and redacts nested signature-like fields in decoded payloads.
+
