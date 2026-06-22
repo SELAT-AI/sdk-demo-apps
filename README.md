@@ -3,4 +3,4 @@
 Demo apps built with the SELAT SDK.
 
 - [ETH Market Brief](./eth-market-brief): a treasury analyst workflow that routes x402 and MPP paid API calls through SELAT, signed with a Circle Agent Wallet.
-- [ETH Market Brief (Arc)](./eth-market-brief-arc): the same workflow funded from a Circle Gateway balance on Arc mainnet and signed in-process with a private key — no Circle CLI or signing service required.
+- **ETH Market Brief (Arc)** — the private-key variant funded from a Circle Gateway balance on Arc mainnet now lives in its own repo: [SELAT-AI/sdk-demo-app-arc](https://github.com/SELAT-AI/sdk-demo-app-arc).
