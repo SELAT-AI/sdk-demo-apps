@@ -1,7 +1,6 @@
 import {
   RouterClient,
   createCircleAgentWalletSigner,
-  createRemoteSigner,
   createViemSigner,
   type RouterClientOptions,
   type RouterFetchOptions
@@ -29,62 +28,48 @@ function getChain(): RouterClientOptions["chain"] {
   return (process.env.SELAT_CHAIN ?? "base") as RouterClientOptions["chain"];
 }
 
-function createDemoClient() {
+type DemoClientResult =
+  | { client: RouterClient; setup?: never }
+  | { client: null; setup: string };
+
+function createDemoClient(): DemoClientResult {
   const chain = getChain();
   const routerUrl = process.env.SELAT_ROUTER_URL;
+  const remoteSignerAddress = process.env.SELAT_SIGNER_ADDRESS as `0x${string}` | undefined;
+
+  if (remoteSignerAddress) {
+    const signer = createCircleAgentWalletSigner({
+      address: remoteSignerAddress,
+      chain: "base"
+    });
+
+    return {
+      client: new RouterClient({
+        chain: "base",
+        routerUrl,
+        signer
+      })
+    };
+  }
+
   const privateKey = process.env.X402_CLIENT_PRIVATE_KEY as `0x${string}` | undefined;
 
   if (privateKey) {
-    return new RouterClient({
-      chain,
-      routerUrl,
-      signer: createViemSigner(privateKey)
-    });
-  }
-
-  const remoteSignerAddress = process.env.SELAT_SIGNER_ADDRESS as `0x${string}` | undefined;
-  const remoteSignerUrl = process.env.SELAT_SIGNER_API_URL;
-
-  if (remoteSignerAddress && remoteSignerUrl) {
-    return new RouterClient({
-      chain,
-      routerUrl,
-      signer: createRemoteSigner(remoteSignerAddress, async ({ address, typedData }) => {
-        const response = await fetch(remoteSignerUrl, {
-          method: "POST",
-          headers: {
-            "content-type": "application/json"
-          },
-          body: JSON.stringify({ address, typedData })
-        });
-
-        if (!response.ok) {
-          throw new Error(`Remote signer returned ${response.status}`);
-        }
-
-        const json = (await response.json()) as { signature?: `0x${string}` };
-
-        if (!json.signature) {
-          throw new Error("Remote signer response did not include a signature");
-        }
-
-        return json.signature;
+    return {
+      client: new RouterClient({
+        chain,
+        routerUrl,
+        signer: createViemSigner(privateKey)
       })
-    });
+    };
   }
 
-  if (remoteSignerAddress) {
-    return new RouterClient({
-      chain,
-      routerUrl,
-      signer: createCircleAgentWalletSigner({
-        address: remoteSignerAddress,
-        chain
-      })
-    });
-  }
 
-  return null;
+  return {
+    client: null,
+    setup:
+      "Set SELAT_SIGNER_ADDRESS for a Circle Agent Wallet, or set X402_CLIENT_PRIVATE_KEY for a private-key demo."
+  };
 }
 
 function mergeRequestOptions(endpointOptions: RouterFetchOptions, body: DemoRequestBody): RouterFetchOptions {
@@ -227,15 +212,14 @@ export async function POST(request: Request) {
     );
   }
 
-  const client = createDemoClient();
+  const { client, setup } = createDemoClient();
   const chain = getChain();
 
   if (!client) {
     return NextResponse.json(
       {
         error: "Signer is not configured.",
-        setup:
-          "Set SELAT_SIGNER_ADDRESS for a Circle Agent Wallet, or set X402_CLIENT_PRIVATE_KEY for a local private-key demo."
+        setup
       },
       { status: 501 }
     );

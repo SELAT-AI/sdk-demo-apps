@@ -6,6 +6,10 @@ export const runtime = "nodejs";
 
 const execFileAsync = promisify(execFile);
 
+function isVercelRuntime() {
+  return process.env.VERCEL === "1" || Boolean(process.env.VERCEL_ENV);
+}
+
 function toCircleChain(chain: string) {
   switch (chain.toLowerCase()) {
     case "base":
@@ -141,6 +145,18 @@ export async function GET(request: Request) {
       },
       message: "Run a paid API step to show Gateway transactions created by that call."
     });
+  }
+
+  if (isVercelRuntime()) {
+    return NextResponse.json(
+      {
+        address,
+        chain,
+        setup:
+          "Gateway transaction lookup uses the Circle CLI in this demo. On Vercel, wire a server-side Circle API integration or inspect Gateway activity locally."
+      },
+      { status: 501 }
+    );
   }
 
   try {
