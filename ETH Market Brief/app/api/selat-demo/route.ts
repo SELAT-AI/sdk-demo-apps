@@ -1,6 +1,7 @@
 import {
   RouterClient,
   createCircleAgentWalletSigner,
+  createHttpRemoteSigner,
   createViemSigner,
   type RouterClientOptions,
   type RouterFetchOptions
@@ -28,6 +29,15 @@ function getChain(): RouterClientOptions["chain"] {
   return (process.env.SELAT_CHAIN ?? "base") as RouterClientOptions["chain"];
 }
 
+// Vercel (and any serverless platform) cannot run the local `circle` CLI that
+// createCircleAgentWalletSigner shells out to: the binary is not bundled into
+// the function and there is no authenticated `circle login` session on the
+// ephemeral, read-only filesystem. Detect it so the CLI path is never attempted
+// in production.
+function isVercelRuntime() {
+  return process.env.VERCEL === "1" || Boolean(process.env.VERCEL_ENV);
+}
+
 type DemoClientResult =
   | { client: RouterClient; setup?: never }
   | { client: null; setup: string };
@@ -35,19 +45,41 @@ type DemoClientResult =
 function createDemoClient(): DemoClientResult {
   const chain = getChain();
   const routerUrl = process.env.SELAT_ROUTER_URL;
-  const remoteSignerAddress = process.env.SELAT_SIGNER_ADDRESS as `0x${string}` | undefined;
+  const signerAddress = process.env.SELAT_SIGNER_ADDRESS as `0x${string}` | undefined;
+  const remoteSignerUrl = process.env.SELAT_SIGNER_API_URL;
 
-  if (remoteSignerAddress) {
-    const signer = createCircleAgentWalletSigner({
-      address: remoteSignerAddress,
-      chain: "base"
-    });
+  // Preferred Agent Wallet path on serverless: delegate signing over HTTP to a
+  // hosted service (where the Circle CLI / Agent Wallet credentials live).
+  if (signerAddress && remoteSignerUrl) {
+    return {
+      client: new RouterClient({
+        chain,
+        routerUrl,
+        signer: createHttpRemoteSigner({
+          address: signerAddress,
+          endpoint: remoteSignerUrl,
+          token: process.env.SELAT_SIGNER_API_TOKEN
+        })
+      })
+    };
+  }
+
+  // Local-only Agent Wallet path: signs by spawning the local `circle` CLI.
+  if (signerAddress) {
+    if (isVercelRuntime()) {
+      return {
+        client: null,
+        setup:
+          "The Circle Agent Wallet path signs via the local `circle` CLI, which is unavailable on Vercel. " +
+          "Set SELAT_SIGNER_API_URL to a hosted remote signer, or use X402_CLIENT_PRIVATE_KEY for a private-key demo."
+      };
+    }
 
     return {
       client: new RouterClient({
-        chain: "base",
+        chain,
         routerUrl,
-        signer
+        signer: createCircleAgentWalletSigner({ address: signerAddress, chain })
       })
     };
   }
@@ -68,7 +100,9 @@ function createDemoClient(): DemoClientResult {
   return {
     client: null,
     setup:
-      "Set SELAT_SIGNER_ADDRESS for a Circle Agent Wallet, or set X402_CLIENT_PRIVATE_KEY for a private-key demo."
+      "Set SELAT_SIGNER_ADDRESS + SELAT_SIGNER_API_URL for a Circle Agent Wallet on Vercel, " +
+      "SELAT_SIGNER_ADDRESS alone for the local Circle CLI, " +
+      "or X402_CLIENT_PRIVATE_KEY for a private-key demo."
   };
 }
 

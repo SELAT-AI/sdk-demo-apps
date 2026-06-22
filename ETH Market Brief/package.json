@@ -9,7 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@selat-ai/router-client": "^0.1.0",
+    "@selat-ai/router-client": "^0.1.2",
     "next": "^15.3.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
