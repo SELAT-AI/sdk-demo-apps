@@ -1,13 +1,12 @@
 import {
   RouterClient,
-  createCircleAgentWalletSigner,
-  createHttpRemoteSigner,
   createViemSigner,
   type RouterClientOptions,
   type RouterFetchOptions
 } from "@selat-ai/router-client";
 import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
+import { createCircleDeveloperWalletSigner } from "@/lib/circle-developer-wallet-signer";
 import { getDemoEndpoint, toRouterFetchOptions } from "@/lib/demo-catalogue";
 import {
   recordOffchainPaymentPayload,
@@ -29,15 +28,6 @@ function getChain(): RouterClientOptions["chain"] {
   return (process.env.SELAT_CHAIN ?? "base") as RouterClientOptions["chain"];
 }
 
-// Vercel (and any serverless platform) cannot run the local `circle` CLI that
-// createCircleAgentWalletSigner shells out to: the binary is not bundled into
-// the function and there is no authenticated `circle login` session on the
-// ephemeral, read-only filesystem. Detect it so the CLI path is never attempted
-// in production.
-function isVercelRuntime() {
-  return process.env.VERCEL === "1" || Boolean(process.env.VERCEL_ENV);
-}
-
 type DemoClientResult =
   | { client: RouterClient; setup?: never }
   | { client: null; setup: string };
@@ -46,40 +36,25 @@ function createDemoClient(): DemoClientResult {
   const chain = getChain();
   const routerUrl = process.env.SELAT_ROUTER_URL;
   const signerAddress = process.env.SELAT_SIGNER_ADDRESS as `0x${string}` | undefined;
-  const remoteSignerUrl = process.env.SELAT_SIGNER_API_URL;
+  const circleApiKey = process.env.CIRCLE_API_KEY;
+  const circleEntitySecret = process.env.CIRCLE_ENTITY_SECRET;
+  const circleWalletId = process.env.CIRCLE_WALLET_ID;
 
-  // Preferred Agent Wallet path on serverless: delegate signing over HTTP to a
-  // hosted service (where the Circle CLI / Agent Wallet credentials live).
-  if (signerAddress && remoteSignerUrl) {
+  // Preferred path: a Circle developer-controlled wallet. Signing is a pure
+  // HTTPS call to Circle's API (POST /v1/w3s/developer/sign/typedData), so it
+  // works on Vercel and any serverless platform unchanged. The API key and
+  // entity secret stay on the server; the browser never sees signer material.
+  if (signerAddress && circleApiKey && circleEntitySecret && circleWalletId) {
     return {
       client: new RouterClient({
         chain,
         routerUrl,
-        signer: createHttpRemoteSigner({
+        signer: createCircleDeveloperWalletSigner({
           address: signerAddress,
-          endpoint: remoteSignerUrl,
-          token: process.env.SELAT_SIGNER_API_TOKEN
+          walletId: circleWalletId,
+          apiKey: circleApiKey,
+          entitySecret: circleEntitySecret
         })
-      })
-    };
-  }
-
-  // Local-only Agent Wallet path: signs by spawning the local `circle` CLI.
-  if (signerAddress) {
-    if (isVercelRuntime()) {
-      return {
-        client: null,
-        setup:
-          "The Circle Agent Wallet path signs via the local `circle` CLI, which is unavailable on Vercel. " +
-          "Set SELAT_SIGNER_API_URL to a hosted remote signer, or use X402_CLIENT_PRIVATE_KEY for a private-key demo."
-      };
-    }
-
-    return {
-      client: new RouterClient({
-        chain,
-        routerUrl,
-        signer: createCircleAgentWalletSigner({ address: signerAddress, chain })
       })
     };
   }
@@ -96,13 +71,11 @@ function createDemoClient(): DemoClientResult {
     };
   }
 
-
   return {
     client: null,
     setup:
-      "Set SELAT_SIGNER_ADDRESS + SELAT_SIGNER_API_URL for a Circle Agent Wallet on Vercel, " +
-      "SELAT_SIGNER_ADDRESS alone for the local Circle CLI, " +
-      "or X402_CLIENT_PRIVATE_KEY for a private-key demo."
+      "Set SELAT_SIGNER_ADDRESS + CIRCLE_API_KEY + CIRCLE_ENTITY_SECRET + CIRCLE_WALLET_ID " +
+      "for a Circle developer-controlled wallet, or X402_CLIENT_PRIVATE_KEY for a private-key demo."
   };
 }
 

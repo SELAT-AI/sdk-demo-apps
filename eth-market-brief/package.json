@@ -9,10 +9,12 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@circle-fin/developer-controlled-wallets": "^10.7.1",
     "@selat-ai/router-client": "^0.1.2",
     "next": "^15.3.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "viem": "^2.53.1"
   },
   "devDependencies": {
     "@types/node": "^22.15.0",
